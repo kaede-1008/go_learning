@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"html/template"
+	"glablueProject/local/twitter"
 )
 
 func write(writer http.ResponseWriter, message string) {
@@ -30,7 +31,7 @@ func index(writer http.ResponseWriter, request *http.Request) {
 func login(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("method:", request.Method)
 	if request.Method == "GET" {
-		t, _ :=template.ParseFiles("login.gtpl")
+		t, _ := template.ParseFiles("login.gtpl")
 		t.Execute(writer, nil)
 	} else {
 		// ログインデータがリクエストされ，ログインのロジック判断が実行される
@@ -48,6 +49,7 @@ func login(writer http.ResponseWriter, request *http.Request) {
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/login", login)
+	http.HandleFunc("/search", twitter.Show)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

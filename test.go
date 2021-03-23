@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"glablueProject/local/twitter"
 )
 
 func main() {
 	twitter.Set()
-	tweets := twitter.Search(`美味しい`)
-	fmt.Println(tweets)
+	twitter.TestSearch(`美味しい`)
+	// fmt.Println(tweets)
 }
