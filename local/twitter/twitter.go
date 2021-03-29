@@ -7,6 +7,9 @@ import (
 	// "encoding/json"
 	"net/http"
 	"html/template"
+	"time"
+	"regexp"
+	"unicode/utf8"
 	// "log"
 	// simplejson "github.com/bitly/go-simplejson"
 )
@@ -41,46 +44,72 @@ func search(word string) []*Tweet {
 		tweets = append(tweets, tweet)
 	}
 	return tweets
-	// out, err := json.Marshal(tweets)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // fmt.Println(string(out))
-	// return out
+}
+
+func getParticipationId(text string) string {
+	r := regexp.MustCompile(`^([0-9A-Z]{8})`)
+	s := r.FindString(text)
+
+	if s == "" {
+		return ""
+	}
+	return s[0:utf8.RuneCountInString(s)]
 }
 
 func Show(writer http.ResponseWriter, request *http.Request) {
 	var m []*Tweet
+	
+	data := struct {
+		Title string
+	}{
+		Title: "Search Key Word",
+	}
+	// var msg Msg = Msg{}
+	// setintervalのような定期実行
+	ticker := time.NewTicker(time.Millisecond * 60)
+	// slice := []string {"エウロペ", "ワムデュス"}
+	// exist := 0
 
+	defer ticker.Stop()
+    count := 0
+    
 	if request.Method == "GET" {
 		t, _ := template.ParseFiles("twitter.gtpl")
-		t.Execute(writer, nil)
+		t.Execute(writer, data)
 	} else {
-		word := request.FormValue("word")
-
-		m = search(word)
-
-		// err := json.Unmarshal(s_result, &m)
-		// if err != nil {
-		// 	log.Fatal(err)
+		request.ParseForm()
+		// enemy := request.Form["enemy"]
+		// for _, i := range enemy {
+		// 	for _, s := range slice {
+		// 		if i == s {
+		// 			exist++
+		// 		}
+		// 	}
 		// }
-		// fmt.Println(m)
-		for _, data := range m {
-			fmt.Fprintln(writer, data.Id)
-			fmt.Fprintln(writer, data.Text)
-		}
-
-		// json, err := simplejson.NewJson(s_result)
-		// if err != nil {
-		// 	log.Fatal(err)
+		// if len(enemy) != exist {
+		// 	msg.Message = msg.Message + "選択肢の中から選んでください"
 		// }
-		
-		// for _, datas := range json.MustArray() {
-		// 	// fmt.Fprintf(writer, json.GetIndex(i))
-		// 	// fmt.Println(json.GetIndex(i))
-		// 	fmt.Println(datas["text"])
-
+		// if msg.Message != "" {
+		// 	http.Redirect(writer, request, "/search", 301)
 		// }
+		word := request.Form["enemy"][0]
+		for {
+			select {
+				case <-ticker.C:
+					count++
+					
+					m = search(word)
+
+					for _, data := range m {
+						pid := getParticipationId(data.Text)
+						if pid != "" {
+							fmt.Fprintln(writer, data.Id)
+							fmt.Fprintln(writer, data.Text)
+							fmt.Fprintln(writer, pid)
+						}
+					}
+			}
+		}	
 	}
 }
 
@@ -90,3 +119,7 @@ type Tweet struct {
 }
 
 type Tweets *[]Tweet
+
+// type Msg struct {
+// 	Message string
+// }
